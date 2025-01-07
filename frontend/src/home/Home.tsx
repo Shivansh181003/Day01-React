@@ -1,31 +1,50 @@
+import axios from "axios";
+import { useEffect, useState } from "react";
+
 interface Task {
   taskName: string;
   completed: boolean;
 }
 
 export default function Home() {
-  const taskList = [
-    {
-      taskName: "Learn FrontEnd",
-      completed: true,
-    },
-    {
-      taskName: "Learn Backend",
-      completed: false,
-    },
-    {
-      taskName: "Learn Database",
-      completed: false,
-    },
-    {
-      taskName: "Learn Authentication",
-      completed: false,
-    },
-    {
-      taskName: "Final Integration",
-      completed: false,
-    },
-  ];
+  // const taskList = [
+  //   {
+  //     taskName: "Learn FrontEnd",
+  //     completed: true,
+  //   },
+  //   {
+  //     taskName: "Learn Backend",
+  //     completed: false,
+  //   },
+  //   {
+  //     taskName: "Learn Database",
+  //     completed: false,
+  //   },
+  //   {
+  //     taskName: "Learn Authentication",
+  //     completed: false,
+  //   },
+  //   {
+  //     taskName: "Final Integration",
+  //     completed: false,
+  //   },
+  // ];
+  
+  const [taskList, setTaskList] = useState([])
+
+  async function fetchTaskList(){
+    const responce = await axios("http://localhost:3001/tasklist")
+    setTaskList(responce.data.tasks)
+    console.log(responce.data.tasks);
+    
+  }
+
+  if(!taskList[0]){
+    console.log("TaskList Empty !!");
+    fetchTaskList()
+  }
+
+  
   return (
     <div className="flex justify-start pt-48 items-center h-full flex-col gap-8">
       <div className="w-4/5 flex justify-center items-center gap-10">
@@ -40,6 +59,13 @@ export default function Home() {
           className="bg-secondary px-5 py-1 border-primary border-2 rounded-3xl"
         >
           Add
+        </button>
+        <button
+          type="submit"
+          className="bg-green-400 px-5 py-1 border-primary border-2 rounded-3xl"
+          onClick={()=>{fetchTaskList()}}
+        >
+          Fetch
         </button>
       </div>
       <div id="taskList" className=" w-4/5 h-auto gap-5 flex flex-col">
