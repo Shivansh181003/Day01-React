@@ -8,7 +8,7 @@ mongoose.connect(
 const user = new UserModel({
   name: "Rajani",
   email: "rajanis@example.com",
-  phone: 68463434,
+  phone: 68463434
 });
 
 user

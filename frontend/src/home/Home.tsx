@@ -31,10 +31,21 @@ export default function Home() {
   //   },
   // ];
 
+  const instance = axios.create({
+    baseURL: import.meta.env.VITE_BACKEND_URL,
+    headers: {
+      // "Access-Control-Allow-Origin": "htp://localhost:8000",
+    },
+  });
+
   const [taskList, setTaskList] = useState([]);
 
   async function fetchTaskList() {
-    const responce = await axios("http://localhost:3001/tasklist");
+    console.log(import.meta.env.VITE_BACKEND_URL + "/tasklist");
+
+    const responce = await instance.get("/tasklist", {
+      withCredentials: true,
+    });
     setTaskList(responce.data.tasks);
     console.log(responce.data.tasks);
   }
@@ -46,19 +57,23 @@ export default function Home() {
     const bodyFormData = new FormData();
     bodyFormData.append("task", task);
 
-    await axios.post("http://localhost:3001/addtask", bodyFormData, {
+    await axios.post("http://localhost:3000/addtask", bodyFormData, {
       headers: {
         "Content-Type": "multipart/form-data",
+        "Access-Control-Allow-Origin": "*",
       },
+      withCredentials: true,
     });
 
     fetchTaskList(); // Refresh the task list after adding a new task
   }
 
-  if (!taskList[0]) {
-    console.log("TaskList Empty !!");
-    fetchTaskList();
-  }
+  useEffect(() => {
+    if (!taskList[0]) {
+      console.log("TaskList Empty !!");
+      fetchTaskList();
+    }
+  }, []);
 
   return (
     <div className="flex justify-center  pt-48 items-center h-full flex-col gap-8">
@@ -85,14 +100,46 @@ export default function Home() {
       </div>
       <div id="taskList" className=" w-4/5 h-auto gap-5 flex flex-col">
         {taskList.map((task, id) => (
-          <Tasks task={task} key={id} />
+          <Tasks task={task} key={id} onCompletion={fetchTaskList} />
         ))}
       </div>
     </div>
   );
 }
 
-function Tasks({ task }: { task: Task }) {
+function Tasks({
+  task,
+  onCompletion,
+}: {
+  task: Task;
+  onCompletion: () => void;
+}) {
+  async function handleCompletion(task: Task) {
+    const uid = task.uid;
+    const bodyFormData = new FormData();
+    bodyFormData.append("uid", uid.toString());
+    await axios.post(
+      import.meta.env.BACKEND_URL + "/updateTask",
+      bodyFormData,
+      {
+        withCredentials: true,
+      }
+    );
+    onCompletion();
+  }
+  async function handleDeletion(task: Task) {
+    const uid = task.uid;
+    const bodyFormData = new FormData();
+    bodyFormData.append("uid", uid.toString());
+    await axios.post(
+      import.meta.env.BACKEND_URL + "/deleteTask",
+      bodyFormData,
+      {
+        withCredentials: true,
+      }
+    );
+    onCompletion();
+  }
   return (
     <div
       className={`flex gap-4 items-center justify-between p-8 w-full h-10 border-2 border-black rounded-2xl ${
@@ -100,9 +147,24 @@ function Tasks({ task }: { task: Task }) {
       }`}
     >
       <p className="font-semibold text-xl">{task.taskName}</p>
-      <button className="bg-blue-400 w-48 px-5 py-1 border-primary border-2 rounded-3xl">
-        Mark {task.completed ? "Uncomplete" : "Complete"}
-      </button>
+      <div className="flex gap-2">
+        <button
+          className="bg-blue-400 w-48 px-5 py-1 border-primary border-2 rounded-3xl"
+          onClick={() => {
+            handleCompletion(task);
+          }}
+        >
+          Mark {task.completed ? "Uncomplete" : "Complete"}
+        </button>
+        <button
+          className="bg-red-400 w-28 px-5 py-1 border-primary border-2 rounded-3xl font-semibold text-white"
+          onClick={() => {
+            handleDeletion(task);
+          }}
+        >
+          Delete
+        </button>
+      </div>
     </div>
   );
 }
